@@ -19,3 +19,43 @@
 .Game__ball {
   fill: #f0f;
 }
+
+
+
+
+.Game__ballTrajectory {
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-dasharray: 10 10;
+  opacity: 0.1;
+}
+
+
+
+.Game__player > circle {
+  fill: red;
+}
+.Game__player > circle + circle {
+  fill: #fff;
+}
+.Game__player > circle:last-child {
+  fill: #fff;
+  opacity: 0.1;
+}
+
+
+
+
+.Game__paddle {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-dasharray: 10 10 10;
+  opacity: 0.1;
+}
+
+
+
+.Game__player--b > circle {
+  fill: blue;
+}
