@@ -1,7 +1,15 @@
 import './index.css'
 import React, { Component } from 'react'
-import Point from 'point-geometry'
+// import Vector from 'point-geometry'
+import Vector from '../../utils/Vector'
 
+//
+// const v1 = new Vector(0, 0)
+// console.log(v1)
+// v1.add(new Vector(10, 10))
+// console.log(v1)
+// v1.add(new Vector(10, 100))
+// console.log(v1, v1.angleDeg())
 
 
 
@@ -34,11 +42,16 @@ class Game extends Component {
   }
   lastPhysicsTime = Date.now()
 
+  ballAngle = Math.random() + 3
   ball = {
     x: GAME_WIDTH / 2,
-    y: Math.random() * GAME_HEIGHT,
-    vx: Math.random() * 10 + 20 * (Math.random() > 0.5 ? -1 : 1),
-    vy: Math.random() * 10 - 5,
+    y: GAME_HEIGHT / 2,
+    vx: 20 * Math.cos(this.ballAngle),
+    vy: 20 * Math.sin(this.ballAngle),
+    // x: GAME_WIDTH * 0.4,
+    // y: GAME_HEIGHT * 0,
+    // vx: -10,
+    // vy: 10,
   }
 
   ballTrajectory = {
@@ -61,12 +74,16 @@ class Game extends Component {
   }
 
   paddleA = {
+    vx: 0,
+    vy: 0,
     xo: PADDLE_R * -0.75,
     x: this.playerA.x,
     y: this.playerA.y,
   }
 
   paddleB = {
+    vx: 0,
+    vy: 0,
     xo: PADDLE_R * 0.75,
     x: this.playerB.x + PADDLE_R * 0.8,
     y: this.playerB.y,
@@ -105,26 +122,32 @@ class Game extends Component {
 
     // Collisions
 
-    const ballPoint = new Point(this.ball.x, this.ball.y)
-    const playerAPoint = new Point(this.playerA.x, this.playerA.y)
-    const playerBPoint = new Point(this.playerB.x, this.playerB.y)
-    const paddleAPoint = new Point(this.paddleA.x, this.paddleA.y)
-    const paddleBPoint = new Point(this.paddleB.x, this.paddleB.y)
+    const ballV = new Vector(this.ball.x, this.ball.y)
+    const playerAV = new Vector(this.playerA.x, this.playerA.y)
+    const playerBV = new Vector(this.playerB.x, this.playerB.y)
+    const paddleAV = new Vector(this.paddleA.x, this.paddleA.y)
+    const paddleBV = new Vector(this.paddleB.x, this.paddleB.y)
 
-    const playerAcanReach = playerAPoint.dist(ballPoint) < BALL_R + PLAYER_REACH_R
-    const playerBcanReach = playerBPoint.dist(ballPoint) < BALL_R + PLAYER_REACH_R
+    // console.log(playerAV.distance(ballV))
 
-    const ballHitsPaddleA = paddleAPoint.dist(ballPoint) < BALL_R + PADDLE_R
-    const ballHitsPaddleB = paddleBPoint.dist(ballPoint) < BALL_R + PADDLE_R
+    const playerAcanReach = (
+      playerAV.distance(ballV) < BALL_R + PLAYER_REACH_R
+      && ballV.x > playerAV.x
+    )
+    const playerBcanReach = (
+      playerBV.distance(ballV) < BALL_R + PLAYER_REACH_R
+      && ballV.x < playerBV.x
+    )
+
+    const ballHitsPaddleA = paddleAV.distance(ballV) < BALL_R + PADDLE_R
+    const ballHitsPaddleB = paddleBV.distance(ballV) < BALL_R + PADDLE_R
 
     if (ballHitsPaddleA && playerAcanReach) {
-      this.ball.vx *= -1
-      this.ball.x += 10
+      this.handlePaddleHit(this.paddleA, this.ball)
     }
 
     if (ballHitsPaddleB && playerBcanReach) {
-      this.ball.vx *= -1
-      this.ball.x -= 10
+      this.handlePaddleHit(this.paddleB, this.ball)
     }
 
   }
@@ -151,32 +174,30 @@ class Game extends Component {
     if (ball.vx < 0) x2 = BALL_BOUNDS.left
     else x2 = BALL_BOUNDS.right
 
-    let distanceToEdge = 0
-    if (ball.vx < 0) distanceToEdge = ball.x
-    else distanceToEdge = BALL_BOUNDS.right - ball.x
+    let distanceEdge = 0
+    if (ball.vx < 0) distanceEdge = ball.x
+    else distanceEdge = BALL_BOUNDS.right - ball.x
 
-    const y2 = ball.y + distanceToEdge / Math.abs(ball.vx) * ball.vy
+    let y2 = ball.y
+    if (ball.vx && ball.vy) y2 += distanceEdge / Math.abs(ball.vx) * ball.vy
 
     return {
-      x1: ball.x - 4,
-      y1: ball.y - 4,
-      x2: x2 - 4,
-      y2: y2 - 4,
+      x1: ball.x,
+      y1: ball.y,
+      x2: x2,
+      y2: y2,
     }
   }
 
   getNextPlayer(player, ball, timeComp, bot=false) {
-    const playerPoint = new Point(player.x, player.y)
-    const ballPoint = new Point(ball.x, ball.y)
+    const playerV = new Vector(player.x, player.y)
+    const ballV = new Vector(ball.x, ball.y)
 
     let y = player.y
     if (bot) y += 5 * timeComp
     if ( y > GAME_HEIGHT ) y = 0
 
-    // const leftPlayer = player.x < GAME_WIDTH / 2
-
-    const angleFix = -180
-    const angle = this.getDegrees(playerPoint.angleTo(ballPoint)) + angleFix
+    const angle = ballV.angleTo(playerV)
 
     return {
       ...player,
@@ -191,6 +212,38 @@ class Game extends Component {
       x: player.x + paddle.xo,
       y: player.y,
     }
+  }
+
+  handlePaddleHit(paddle, ball) {
+    const ballV = new Vector(ball.x, ball.y)
+    const paddleV = new Vector(paddle.x, paddle.y)
+
+    // Correct ball position
+    const paddleAngleToBall = ballV.angleTo(paddleV)
+    ball.x = paddle.x + (PADDLE_R + BALL_R) * Math.cos(paddleAngleToBall)
+    ball.y = paddle.y + (BALL_R + PADDLE_R) * Math.sin(paddleAngleToBall)
+
+    const delta = ballV.clone().subtract(paddleV)
+    const d = delta.length()
+    const mtd = delta.clone().multiply(((BALL_R + PADDLE_R) - d) / d)
+
+    const im1 = 1 / 1 // ball
+    const im2 = 1 / 0xfffffff // paddle
+
+    const v = new Vector(this.ball.vx, this.ball.vy)//.negative()
+    const vn = v.clone().dot(mtd.normalize())
+
+    if (vn > 0) return
+
+    const i = (-(1 + 0.85) * vn) / (im1 + im2)
+    const impulse = mtd.clone().multiply(i)
+
+    const velocity =
+      new Vector(this.ball.vx, this.ball.vy)
+      .add(impulse.clone().multiply(im1))
+
+    this.ball.vx = velocity.x * 1.1
+    this.ball.vy = velocity.y * 1.1
   }
 
   getDegrees(radians) {
@@ -230,8 +283,8 @@ class Game extends Component {
         <circle
           className="Game__ball"
           r={BALL_R}
-          cx={BALL_R / -2}
-          cy={BALL_R / -2}
+          cx="0"
+          cy="0"
           style={{
             transform: `translate3d(${ball.x}px, ${ball.y}px, 0)`
           }}
@@ -248,7 +301,7 @@ class Game extends Component {
         <g
           className="Game__player Game__player--a"
           style={{
-            transform: `translate3d(${playerA.x}px, ${playerA.y}px, 0) rotate3d(0, 0, 1, ${playerA.angle}deg)`
+            transform: `translate3d(${playerA.x}px, ${playerA.y}px, 0) rotate3d(0, 0, 1, ${playerA.angle}rad)`
           }}
           x={PLAYER_R / -2}
           y={PLAYER_R / -2}
@@ -270,7 +323,7 @@ class Game extends Component {
         <g
           className="Game__player Game__player--b"
           style={{
-            transform: `translate3d(${playerB.x}px, ${playerB.y}px, 0) rotate3d(0, 0, 1, ${playerB.angle}deg)`
+            transform: `translate3d(${playerB.x}px, ${playerB.y}px, 0) rotate3d(0, 0, 1, ${playerB.angle}rad)`
           }}
           x={PLAYER_R / -2}
           y={PLAYER_R / -2}
