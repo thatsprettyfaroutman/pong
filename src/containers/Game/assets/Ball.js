@@ -3,6 +3,7 @@ import Entity from './Entity'
 
 class Ball extends Entity {
   radius = 10
+  minVelocityX = 10
 
   constructor(options) {
     super()
@@ -21,17 +22,23 @@ class Ball extends Entity {
   }
 
   updateVelocities = () => {
+    const { position, radius, bounds, velocity, minVelocityX } = this
     if (
-      this.position.x - this.radius < this.bounds.min.x
-      || this.position.x + this.radius > this.bounds.max.x
+      position.x - radius < bounds.min.x
+      || position.x + radius > bounds.max.x
     )
-      this.velocity.x *= -1
+      velocity.x *= -1
+
+    const negative = this.velocity.x < 0 ? -1 : 1
+    if (Math.abs(velocity.x) < minVelocityX) {
+      velocity.x = minVelocityX * negative
+    }
 
     if (
-      this.position.y - this.radius < this.bounds.min.y
-      || this.position.y + this.radius > this.bounds.max.y
+      position.y - radius < bounds.min.y
+      || position.y + radius > bounds.max.y
     )
-      this.velocity.y *= -1
+      velocity.y *= -1
   }
 
   draw = () => (

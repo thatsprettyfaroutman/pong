@@ -17,7 +17,7 @@
 
 
 .Game__ball {
-  fill: #f0f;
+  fill: #fff;
 }
 
 
@@ -25,8 +25,8 @@
 
 .Game__trajectory {
   stroke: #fff;
-  stroke-width: 4px;
-  stroke-dasharray: 10 10;
+  stroke-width: 10;
+  stroke-dasharray: 10 100;
   opacity: 0.1;
 }
 
@@ -38,9 +38,12 @@
 .Game__player > circle + circle {
   fill: #fff;
 }
-.Game__player > circle:last-child {
-  fill: #fff;
-  opacity: 0.1;
+
+
+
+
+.Game__playerHitArea {
+  opacity: 0.2;
 }
 
 
@@ -49,8 +52,19 @@
 .Game__paddle {
   fill: none;
   stroke: #fff;
-  stroke-width: 4px;
-  stroke-dasharray: 10 10 10;
+  stroke-width: 10;
+  /* stroke-dasharray: 4 4; */
+}
+
+.Game__paddle > circle {
+  transform: rotate(44deg);
+}
+
+
+
+
+.Game__paddleHitArea {
+  fill: #fff;
   opacity: 0.1;
 }
 

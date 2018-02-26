@@ -2,37 +2,54 @@ import React from 'react'
 import Entity from './Entity'
 import Vector from '../../../utils/Vector'
 
-class Ball extends Entity {
+class Player extends Entity {
+  static SIDE_LEFT = Symbol('SIDE_LEFT')
+  static SIDE_RIGHT = Symbol('SIDE_RIGHT')
+
+  side = Player.SIDE_LEFT
   radius = 30
-  reachRadius = this.radius * 3
   playerNumber = 0
   bot = false
+  botLevel = 1
   ball = null
   paddle = null
 
   constructor(options) {
     super()
     this.set(options)
-    if (!this.ball) throw new Error('Player needs ball')
-    if (!this.paddle) throw new Error('Player needs paddle')
+
+    if (!this.ball)
+      throw new Error('Player needs ball')
+
+    if (!this.paddle)
+      throw new Error('Player needs paddle')
+
+    if (typeof this.playerNumber !== 'number')
+      throw new Error('Player needs playerNumber')
   }
 
   update = timeComp => {
-    this.keepInBounds()
-    if (this.bot) {
-      this.position.y += 5 * timeComp
-      if ( this.position.y > this.bounds.max.y - this.radius )
-        this.position.y = this.bounds.min.y + this.radius
+    const { position, ball, paddle, velocity, bot, botLevel } = this
+
+    if (bot) {
+      const v = new Vector(position.x, position.y)
+      const ballV = new Vector(ball.position.x, ball.position.y)
+      velocity.y =
+        (ball.position.y - position.y) / (v.distance(ballV) / botLevel)
+      position.y += velocity.y * timeComp
     }
 
-    this.lookAt(this.ball.position)
+    this.keepInBounds()
 
-    this.paddle.set({
+    this.lookAt(ball.position)
+
+    paddle.set({
       position: {
-        x: this.position.x,
-        y: this.position.y,
+        x: position.x,
+        y: position.y,
       }
     })
+
   }
 
   lookAt = position => {
@@ -42,9 +59,6 @@ class Ball extends Entity {
   }
 
   hitsBall = () => {
-    const v = new Vector(this.position.x, this.position.y)
-    const ballV = new Vector(this.ball.position.x, this.ball.position.y)
-    if (v.distance(ballV) > this.ball.radius + this.reachRadius) return false
     return this.paddle.hits(this.ball)
   }
 
@@ -53,7 +67,6 @@ class Ball extends Entity {
       position,
       radius,
       angle,
-      reachRadius,
     } = this
 
     const {
@@ -69,17 +82,13 @@ class Ball extends Entity {
             rotate3d(0, 0, 1, ${angle}rad)
           `
         }}
-        x={radius / -2}
-        y={radius / -2}
       >
         <circle r={radius} />
         <circle r={radius * 0.1} cx={radius} cy={radius * -0.3} />
         <circle r={radius * 0.1} cx={radius} cy={radius * 0.3} />
-        <circle r={reachRadius} />
       </g>
     )
   }
-
 }
 
-export default Ball
+export default Player

@@ -26,6 +26,16 @@ class Entity {
       this.position.y = this.bounds.max.y - this.radius
   }
 
+  hitsRect(rect) {
+    const { position, radius } = this
+    return (
+      position.x >= rect.position.x - radius
+      && position.x <= rect.position.x + rect.width + radius
+      && position.y >= rect.position.y - radius
+      && position.y <= rect.position.y + rect.height + radius
+    )
+  }
+
   update = () => null
   draw = () => null
 }

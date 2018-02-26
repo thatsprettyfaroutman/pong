@@ -2,6 +2,9 @@ import './index.css'
 import React, { Component } from 'react'
 import Vector from '../../utils/Vector'
 
+
+
+
 import Ball from './assets/Ball'
 import Player from './assets/Player'
 import Trajectory from './assets/Trajectory'
@@ -12,6 +15,9 @@ import Paddle from './assets/Paddle'
 
 const GAME_WIDTH = 1280
 const GAME_HEIGHT = 720
+
+
+
 
 class Game extends Component {
   state = {
@@ -30,15 +36,14 @@ class Game extends Component {
     angle: Math.random() + 3,
   })
   paddles = [
-    new Paddle({
-      offset: { x: -120, y: 0}
-    }),
-    new Paddle({
-      offset: { x: 120, y: 0}
-    }),
+    new Paddle(),
+    new Paddle(),
   ]
   players = [
     new Player({
+      bot: true,
+      botLevel: 30,
+      side: Player.SIDE_LEFT,
       position: {
         x: 100,
         y: GAME_HEIGHT / 2,
@@ -48,6 +53,8 @@ class Game extends Component {
     }),
     new Player({
       bot: true,
+      botLevel: 100,
+      side: Player.SIDE_RIGHT,
       position: {
         x: GAME_WIDTH - 100,
         y: GAME_HEIGHT / 2,
@@ -59,6 +66,8 @@ class Game extends Component {
   trajectory = new Trajectory({
     ball: this.ball,
   })
+
+
 
 
   componentWillMount() {
@@ -130,9 +139,7 @@ class Game extends Component {
     this.ball.velocity.y = velocity.y * 1.1
   }
 
-  getDegrees(radians) {
-    return radians * 180 / Math.PI
-  }
+
 
 
   render () {
@@ -142,8 +149,6 @@ class Game extends Component {
       trajectory,
       paddles,
     } = this
-
-    // console.log(ball)
 
     return (
       <svg
@@ -155,6 +160,15 @@ class Game extends Component {
         viewBox={`0 0 ${GAME_WIDTH} ${GAME_HEIGHT}`}
         version="1.1"
       >
+
+        <defs>
+          { paddles.map((paddle, i) => (
+            <paddle.drawToDefs
+              key={i}
+              paddleNumber={i}
+            />
+          ))}
+        </defs>
 
         <ball.draw />
         <trajectory.draw />
