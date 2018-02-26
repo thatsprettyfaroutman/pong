@@ -23,7 +23,7 @@
 
 
 
-.Game__ballTrajectory {
+.Game__trajectory {
   stroke: #fff;
   stroke-width: 4px;
   stroke-dasharray: 10 10;
@@ -56,6 +56,6 @@
 
 
 
-.Game__player--b > circle {
+.Game__player--1 > circle {
   fill: blue;
 }
